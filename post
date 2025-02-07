@@ -1,0 +1,25 @@
+import java.io.IOException;
+
+public class CurlPostRequest {
+    public static void main(String[] args) {
+        // Step 1: Populate variables in the URL
+        String baseUrl = "https://example.com/api";
+        String param1 = "value1";
+        String param2 = "value2";
+        String fullUrl = baseUrl + "?param1=" + param1 + "&param2=" + param2;
+
+        // Step 2: Construct the curl command
+        String jsonPayload = "{\"key1\": \"data1\", \"key2\": \"data2\"}";
+        String curlCommand = "curl -X POST -H \"Content-Type: application/json\" -d '" 
+                              + jsonPayload + "' \"" + fullUrl + "\"";
+
+        // Step 3: Execute the curl command
+        try {
+            Process process = Runtime.getRuntime().exec(new String[]{"bash", "-c", curlCommand});
+            process.waitFor();
+            System.out.println("POST request sent to: " + fullUrl);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
