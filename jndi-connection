@@ -1,0 +1,49 @@
+import javax.jms.*;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import java.util.Properties;
+
+public class TibcoJndiDurableSubscriber {
+    public static void main(String[] args) {
+        try {
+            // Step 1: Set JNDI Properties
+            Properties env = new Properties();
+            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.tibco.tibjms.naming.TibjmsInitialContextFactory");
+            env.put(Context.PROVIDER_URL, "tcp://localhost:7222");  // Replace with actual Tibco EMS server URL
+            env.put(Context.SECURITY_PRINCIPAL, "admin");  // EMS Username
+            env.put(Context.SECURITY_CREDENTIALS, "admin");  // EMS Password
+
+            // Step 2: Create JNDI Context
+            Context jndiContext = new InitialContext(env);
+
+            // Step 3: Lookup ConnectionFactory and Topic from JNDI
+            ConnectionFactory connectionFactory = (ConnectionFactory) jndiContext.lookup("ConnectionFactory");
+            Topic topic = (Topic) jndiContext.lookup("topic.sampleTopic");  // Replace with your topic name
+
+            // Step 4: Create JMS Connection, Session, and Subscriber
+            Connection connection = connectionFactory.createConnection();
+            connection.setClientID("DurableSubscriber1");  // Unique client ID for durable subscription
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            TopicSubscriber durableSubscriber = session.createDurableSubscriber(topic, "DurableSub1");
+
+            connection.start();  // Start receiving messages
+
+            System.out.println("Waiting for messages on durable subscription...");
+
+            // Step 5: Receive Messages
+            while (true) {
+                Message message = durableSubscriber.receive();
+                if (message instanceof TextMessage) {
+                    TextMessage textMessage = (TextMessage) message;
+                    System.out.println("Received: " + textMessage.getText());
+                } else {
+                    System.out.println("Received: " + message);
+                }
+            }
+
+            // Step 6: Cleanup Resources (Unreachable in this loop, use a shutdown hook if needed)
+            // durableSubscriber.close();
+            // session.close();
+            // connection.close();
+        } catch (Exceptio
